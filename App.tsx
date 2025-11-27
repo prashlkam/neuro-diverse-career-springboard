@@ -11,8 +11,23 @@ import { X } from 'lucide-react';
 
 export default function App() {
   const [currentTab, setCurrentTab] = useState<Tab>(Tab.PROFILE);
-  const [user, setUser] = useState<User>(MOCK_USER);
   const [panicMode, setPanicMode] = useState(false);
+
+  // Initialize user from localStorage or fall back to MOCK_USER
+  const [user, setUser] = useState<User>(() => {
+    try {
+      const savedUser = localStorage.getItem('neurosync_user');
+      return savedUser ? JSON.parse(savedUser) : MOCK_USER;
+    } catch (error) {
+      console.error('Error loading user from localStorage', error);
+      return MOCK_USER;
+    }
+  });
+
+  // Persist user to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('neurosync_user', JSON.stringify(user));
+  }, [user]);
 
   // Initialize tasks from localStorage or fall back to MOCK_TASKS
   const [tasks, setTasks] = useState<Task[]>(() => {
@@ -29,6 +44,10 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('neurosync_tasks', JSON.stringify(tasks));
   }, [tasks]);
+
+  const updateUser = (updatedUser: User) => {
+    setUser(updatedUser);
+  };
 
   // Task Updater Handler
   const updateTask = (taskId: string, updates: Partial<Task>) => {
@@ -82,7 +101,7 @@ export default function App() {
 
         <div className="max-w-7xl mx-auto w-full pt-4 md:pt-8">
              {/* Tab Rendering */}
-             {currentTab === Tab.PROFILE && <ProfileTab user={user} />}
+             {currentTab === Tab.PROFILE && <ProfileTab user={user} onUpdateUser={updateUser} />}
              {currentTab === Tab.WORK && (
                 <WorkTab 
                     tasks={tasks} 
