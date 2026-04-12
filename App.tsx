@@ -5,6 +5,7 @@ import WorkTab from './components/WorkTab';
 import CareerTab from './components/CareerTab';
 import GamificationTab from './components/GamificationTab';
 import AnalyticsTab from './components/AnalyticsTab';
+import Auth from './components/Auth';
 import { Tab, User, Task } from './types';
 import { MOCK_USER, MOCK_TASKS, CAREER_PATH } from './constants';
 import { X } from 'lucide-react';
@@ -12,6 +13,24 @@ import { X } from 'lucide-react';
 export default function App() {
   const [currentTab, setCurrentTab] = useState<Tab>(Tab.PROFILE);
   const [panicMode, setPanicMode] = useState(false);
+  const [darkMode, setDarkMode] = useState(() => {
+    try {
+      const saved = localStorage.getItem('neurosync_darkmode');
+      return saved ? JSON.parse(saved) : false;
+    } catch {
+      return false;
+    }
+  });
+
+  // Apply dark mode class to document
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    localStorage.setItem('neurosync_darkmode', JSON.stringify(darkMode));
+  }, [darkMode]);
 
   // Initialize user from localStorage or fall back to MOCK_USER
   const [user, setUser] = useState<User>(() => {
@@ -45,6 +64,27 @@ export default function App() {
     localStorage.setItem('neurosync_tasks', JSON.stringify(tasks));
   }, [tasks]);
 
+  // Auth state
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    try {
+      return localStorage.getItem('neurosync_auth') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  const handleLogin = (name: string, email: string) => {
+    // Update user name from login
+    setUser(prev => ({ ...prev, name: name || prev.name }));
+    setIsAuthenticated(true);
+    localStorage.setItem('neurosync_auth', 'true');
+  };
+
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    localStorage.removeItem('neurosync_auth');
+  };
+
   const updateUser = (updatedUser: User) => {
     setUser(updatedUser);
   };
@@ -72,26 +112,33 @@ export default function App() {
     setTasks(prev => [...prev, newTask]);
   };
 
+  const toggleDarkMode = () => setDarkMode(prev => !prev);
+
+  // Show auth screen if not authenticated
+  if (!isAuthenticated) {
+    return <Auth onLogin={handleLogin} />;
+  }
+
   return (
-    <div className="flex flex-col md:flex-row min-h-screen bg-neuro-bg font-sans text-neuro-text">
-      
+    <div className="flex flex-col md:flex-row min-h-screen bg-neuro-bg font-sans text-neuro-text dark:bg-slate-900 dark:text-slate-100 transition-colors duration-300">
+
       {/* Navigation */}
-      <Navigation currentTab={currentTab} setTab={setCurrentTab} />
+      <Navigation currentTab={currentTab} setTab={setCurrentTab} darkMode={darkMode} toggleDarkMode={toggleDarkMode} onLogout={handleLogout} />
 
       {/* Main Content Area */}
       <main className="flex-1 overflow-y-auto no-scrollbar relative pb-20 md:pb-0">
         {/* Panic Modal Overlay */}
         {panicMode && (
             <div className="fixed inset-0 z-[60] bg-red-500/90 backdrop-blur-sm flex items-center justify-center p-4">
-                <div className="bg-white rounded-3xl p-8 max-w-md w-full text-center shadow-2xl animate-bounce-in">
+                <div className="bg-white dark:bg-slate-800 rounded-3xl p-8 max-w-md w-full text-center shadow-2xl animate-bounce-in">
                     <h2 className="text-3xl font-black text-red-600 mb-4">HELP REQUESTED</h2>
-                    <p className="text-xl text-slate-700 mb-8 font-medium">
+                    <p className="text-xl text-slate-700 dark:text-slate-300 mb-8 font-medium">
                         A supervisor has been alerted. <br/>
                         Please stay calm. Help is coming to your desk.
                     </p>
-                    <button 
+                    <button
                         onClick={() => setPanicMode(false)}
-                        className="bg-slate-200 text-slate-700 px-6 py-3 rounded-xl font-bold hover:bg-slate-300 transition-colors flex items-center justify-center gap-2 mx-auto"
+                        className="bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200 px-6 py-3 rounded-xl font-bold hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors flex items-center justify-center gap-2 mx-auto"
                     >
                         <X size={20} /> Cancel Alert
                     </button>
