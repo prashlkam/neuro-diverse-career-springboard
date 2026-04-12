@@ -8,11 +8,12 @@ export default defineConfig(({ mode }) => {
     return {
       server: {
         port: port,
-        host: '0.0.0.0',
+        allowedHosts: ['mywebapp04-gudebcc4bafdg8bn.southindia-01.azurewebsites.net', 'localhost'],
+        // host: '0.0.0.0',
       },
       preview: {
         port: port,
-        host: '0.0.0.0',
+        // host: '0.0.0.0',
       },
       plugins: [react()],
       define: {
