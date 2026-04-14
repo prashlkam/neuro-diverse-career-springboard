@@ -11,6 +11,10 @@ export default defineConfig(({ mode }) => {
         allowedHosts: ['mywebapp04-gudebcc4bafdg8bn.southindia-01.azurewebsites.net', 'localhost'],
         host: '0.0.0.0',
       },
+      build: {
+        outDir: 'dist',
+        sourcemap: false,
+      },
       plugins: [react()],
       define: {
         'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
